@@ -4,10 +4,10 @@ webstomp:
   passcode: "your_passcode"
   destination: "/topic/a_topic"
   protocol: "v12.stomp"
-  sendTimeout: 20000
-  recvTimeout: 20000
+  sendTimeout: "20000"
+  recvTimeout: "20000"
 rabbitmq:
-  url: amqp://guest:guest@localhost:5672//
-  contentType: application/json
+  url: "amqp://guest:guest@localhost:5672//"
+  contentType: "application/json"
   exchange:
-    name: your_exhange_name
+    name: "your_exchange_name"

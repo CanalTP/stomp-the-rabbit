@@ -61,7 +61,7 @@ func (m *AmqpManager) reconnector() {
 	for {
 		err := <-m.errorChannel
 		if !m.closed {
-			logError("reconnnecting after connection closed", err)
+			logError("reconnecting after connection closed", err)
 			m.connect()
 		}
 	}

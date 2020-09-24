@@ -32,7 +32,7 @@ func (c *Config) ToString() string {
 	fmt.Fprintln(&b, "Webstomp configuration")
 	fmt.Fprintln(&b, "----------------------")
 	fmt.Fprintln(&b, "Webstomp target is\t\t", c.Webstomp.Target)
-	fmt.Fprintln(&b, "Webstomp loging is\t\t", c.Webstomp.Login)
+	fmt.Fprintln(&b, "Webstomp login is\t\t", c.Webstomp.Login)
 	fmt.Fprintln(&b, "Webstomp destination is\t\t", c.Webstomp.Destination)
 	fmt.Fprintln(&b, "Webstomp protocol is\t\t", c.Webstomp.Protocol)
 	fmt.Fprintln(&b, "Webstomp send timeout is\t", c.Webstomp.SendTimeout)
@@ -52,7 +52,6 @@ func init() {
 
 	viper.SetEnvPrefix("app")
 	viper.AutomaticEnv()
-	// viper.BindEnv("WEBSTOMP")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	viper.SetDefault("webstomp.sendTimeout", "0")
@@ -60,7 +59,7 @@ func init() {
 	viper.SetDefault("rabbitmq.url", "amqp://guest:guest@localhost:5672//")
 	viper.SetDefault("rabbitmq.contentType", "application/json")
 
-	// I need to that to be able to unmarshal from env vars
+	// I need that to be able to unmarshal from env vars
 	viper.BindEnv("webstomp.target")
 	viper.BindEnv("webstomp.login")
 	viper.BindEnv("webstomp.passcode")
@@ -71,6 +70,8 @@ func init() {
 }
 
 func config() (*Config, error) {
+	// handle error while reading configuration file
+	// if file not found -> no error since this file is optionnal
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return nil, err

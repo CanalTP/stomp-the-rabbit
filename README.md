@@ -15,7 +15,7 @@ You need to install [Go](https://golang.org/doc/install)
 
 ### Global installation with go
 
-The following command install the binary `stomptherabbit` in $GOPATH/bin
+The following command installs the binary `stomptherabbit` in $GOPATH/bin
 
 ```shell
 go install github.com/CanalTP/stomptherabbit/cmd/stomptherabbit
@@ -33,7 +33,7 @@ make build
 `stomptherabbit` needs some connection configuration for the websocket and
 Rabbitmq.
 
-You can load the configuration from environment variables or yaml file.\
+You can load the configuration from environment variables or a yaml file.\
 Global installation only supports environment files.
 
 If you compile from source just create `config.yml` in the root directory, copy the content of [config.yml.example](./config.yml.example) and change the variables.
@@ -67,4 +67,11 @@ stomptherabbit
 
 ```shell
 make run
+```
+
+### With Docker
+
+```shell
+docker build -t stomptherabbit .
+docker run --rm --env-file=/path/to/config.yml stomptherabbit
 ```

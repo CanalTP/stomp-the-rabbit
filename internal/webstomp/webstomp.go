@@ -31,7 +31,7 @@ func Dial(target string, opts WebStompOpts) (*stomp.Conn, error) {
 	c, err := websocket.Dial(u.String(), opts.Protocol, origin.String())
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to open a new client connection to a the WebSocket %s, err: %v", target, err)
+		return nil, fmt.Errorf("failed to open a new client connection to the WebSocket %s, err: %v", target, err)
 	}
 
 	conn, err := stomp.Connect(c,

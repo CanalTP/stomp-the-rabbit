@@ -51,17 +51,16 @@ func main() {
 
 	var conn *stomp.Conn
 	go func() {
-	Loop:
 		for {
 			conn, err = webstomp.Dial(target, opts)
 			if err != nil {
 				log.Printf("failed to connect to webstomp server, err: %v\n", err)
-				continue Loop
+				continue
 			}
 			sub, err := conn.Subscribe(destination, stomp.AckClient)
 			if err != nil {
 				log.Printf("failed to subscribe to %s, err: %v\n", destination, err)
-				continue Loop
+				continue
 			}
 			for {
 				msg := <-sub.C
@@ -87,5 +86,6 @@ func main() {
 	fmt.Println(c.ToString())
 	fmt.Println("Waiting for messages...")
 	<-done
+	fmt.Println("Gracefully exiting...")
 	conn.Disconnect()
 }
