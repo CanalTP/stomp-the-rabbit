@@ -1,47 +1,95 @@
 package webstomp
 
 import (
-	"fmt"
 	"log"
-	"net/url"
 	"time"
 
 	"github.com/go-stomp/stomp"
-	"golang.org/x/net/websocket"
 )
 
-type WebStompOpts struct {
+type Options struct {
 	Protocol    string
 	Login       string
 	Passcode    string
 	SendTimeout int
 	RecvTimeout int
+	Target      string
+	Destination string
 }
 
-func Dial(target string, opts WebStompOpts) (*stomp.Conn, error) {
-	u, err := url.Parse(target)
-	if err != nil {
-		log.Fatal(err)
-	}
-	origin, err := u.Parse("/")
-	if err != nil {
-		return nil, err
-	}
-	origin.Scheme = "https"
-	c, err := websocket.Dial(u.String(), opts.Protocol, origin.String())
+type Client struct {
+	conn *stomp.Conn
+	opts Options
+	sub  *stomp.Subscription
+}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to open a new client connection to the WebSocket %s, err: %v", target, err)
+type messageConsumer func([]byte)
+
+func NewClient(opts Options) *Client {
+	c := new(Client)
+	c.opts = opts
+
+	c.connect()
+
+	return c
+}
+
+func (c *Client) connect() {
+	for {
+		log.Printf("connecting to stomp on %s\n", c.opts.Target)
+		websocketconn, err := Dial(c.opts.Target, c.opts.Protocol)
+		if err == nil {
+			conn, err := stomp.Connect(websocketconn,
+				stomp.ConnOpt.Login(c.opts.Login, c.opts.Passcode),
+				stomp.ConnOpt.HeartBeat(time.Duration(c.opts.RecvTimeout)*time.Millisecond, time.Duration(c.opts.SendTimeout)*time.Millisecond),
+			)
+			if err == nil {
+				c.conn = conn
+				sub, err := c.conn.Subscribe(c.opts.Destination, stomp.AckClient)
+				if err != stomp.ErrClosedUnexpectedly {
+					c.sub = sub
+					log.Println("connection stomp established!")
+					return
+				}
+			}
+		}
+		logError("connection to stomp failed, retrying in 1 sec...", err)
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func (c *Client) Consume(consumer messageConsumer) {
+	for msg := range c.sub.C {
+		if msg.Err != nil {
+			log.Printf("cannot handle message received, NACKing..., err: %v\n", msg.Err)
+			// Unacknowledge the message
+			err := c.conn.Nack(msg)
+			if err != nil {
+				log.Printf("failed to unacknowledge the message, err: %v\n", err)
+			}
+		} else {
+			// Acknowledge the message
+			err := c.conn.Ack(msg)
+			if err != nil {
+				log.Printf("failed to aknowledge message, err: %v\n", err)
+			} else {
+				consumer(msg.Body)
+			}
+		}
+
+	}
+}
+
+func (c *Client) Disconnect() error {
+	if c != nil {
+		return c.conn.Disconnect()
 	}
 
-	conn, err := stomp.Connect(c,
-		stomp.ConnOpt.Login(opts.Login, opts.Passcode),
-		stomp.ConnOpt.HeartBeat(time.Duration(opts.RecvTimeout)*time.Millisecond, time.Duration(opts.SendTimeout)*time.Millisecond),
-	)
+	return nil
+}
 
+func logError(message string, err error) {
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect, err: %v", err)
+		log.Printf("%s: %s", message, err)
 	}
-
-	return conn, nil
 }

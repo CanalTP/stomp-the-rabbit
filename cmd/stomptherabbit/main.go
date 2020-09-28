@@ -9,38 +9,18 @@ import (
 
 	"github.com/CanalTP/stomptherabbit/internal/rabbitmq"
 	"github.com/CanalTP/stomptherabbit/internal/webstomp"
-	"github.com/go-stomp/stomp"
 )
-
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
 
 func main() {
 	c, err := config()
 	if err != nil {
-		failOnError(err, "failed to load configuration")
+		log.Fatalf("failed to load configuration: %s", err)
 	}
 
-	opts := webstomp.WebStompOpts{
-		Protocol:    c.Webstomp.Protocol,
-		Login:       c.Webstomp.Login,
-		Passcode:    c.Webstomp.Passcode,
-		SendTimeout: c.Webstomp.SendTimeout,
-		RecvTimeout: c.Webstomp.RecvTimeout,
-	}
-	destination := c.Webstomp.Destination
-	target := c.Webstomp.Target
-
-	exchangeName := c.RabbitMQ.Exchange.Name
-
-	m := rabbitmq.NewAmqpManager(c.RabbitMQ.URL, exchangeName, c.RabbitMQ.ContentType)
+	m := rabbitmq.NewAmqpManager(c.RabbitMQ.URL, c.RabbitMQ.Exchange.Name, c.RabbitMQ.ContentType)
 	defer m.Close()
 
 	done := make(chan struct{})
-
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -49,43 +29,27 @@ func main() {
 		close(done)
 	}()
 
-	var conn *stomp.Conn
+	opts := webstomp.Options{
+		Protocol:    c.Webstomp.Protocol,
+		Login:       c.Webstomp.Login,
+		Passcode:    c.Webstomp.Passcode,
+		SendTimeout: c.Webstomp.SendTimeout,
+		RecvTimeout: c.Webstomp.RecvTimeout,
+		Target:      c.Webstomp.Target,
+		Destination: c.Webstomp.Destination,
+	}
+
+	var wsClient *webstomp.Client
 	go func() {
-		for {
-			conn, err = webstomp.Dial(target, opts)
-			if err != nil {
-				log.Printf("failed to connect to webstomp server, err: %v\n", err)
-				continue
-			}
-			sub, err := conn.Subscribe(destination, stomp.AckClient)
-			if err != nil {
-				log.Printf("failed to subscribe to %s, err: %v\n", destination, err)
-				continue
-			}
-			for {
-				msg := <-sub.C
-				if msg.Err != nil {
-					log.Printf("cannot handle message received, NACKing..., err: %v\n", msg.Err)
-					// Unacknowledge the message
-					err = conn.Nack(msg)
-					if err != nil {
-						log.Printf("failed to unacknowledge the message, err: %v\n", err)
-					}
-				}
-
-				m.Send(msg.Body)
-
-				// Acknowledge the message
-				err = conn.Ack(msg)
-				if err != nil {
-					log.Printf("failed to aknowledge message, err: %v\n", err)
-				}
-			}
-		}
+		wsClient = webstomp.NewClient(opts)
+		wsClient.Consume(func(msg []byte) {
+			m.Send(msg)
+		})
 	}()
+
 	fmt.Println(c.ToString())
 	fmt.Println("Waiting for messages...")
 	<-done
 	fmt.Println("Gracefully exiting...")
-	conn.Disconnect()
+	wsClient.Disconnect()
 }

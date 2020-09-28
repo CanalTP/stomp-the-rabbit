@@ -19,7 +19,7 @@ build:
 .PHONY: run
 run:
 	$(info >  Running binary)
-	GOOS=linux GOARCH=$(GOARCH) $(GO) run ./cmd/$(PROJECTNAME)
+	GOOS=linux GOARCH=$(GOARCH) $(GO) run -race ./cmd/$(PROJECTNAME)
 
 
 .PHONY: help
