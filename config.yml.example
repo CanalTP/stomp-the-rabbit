@@ -1,0 +1,13 @@
+webstomp:
+  target: "wss://localhost:61614/stomp"
+  login: "your_login"
+  passcode: "your_passcode"
+  destination: "/topic/a_topic"
+  protocol: "v12.stomp"
+  sendTimeout: "20000"
+  recvTimeout: "20000"
+rabbitmq:
+  url: "amqp://guest:guest@localhost:5672//"
+  contentType: "application/json"
+  exchange:
+    name: "your_exchange_name"
