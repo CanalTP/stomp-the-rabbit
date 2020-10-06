@@ -59,13 +59,18 @@ func (c *Client) connect() {
 }
 
 func (c *Client) Consume(consumer messageConsumer) {
-	for msg := range c.sub.C {
-		if msg.Err != nil {
-			log.Printf("cannot handle message received, NACKing..., err: %v\n", msg.Err)
-			// Unacknowledge the message
-			err := c.conn.Nack(msg)
-			if err != nil {
-				log.Printf("failed to unacknowledge the message, err: %v\n", err)
+	for {
+		msg := <-c.sub.C
+		if msg != nil && msg.Err != nil {
+			if c.sub.Active() {
+				log.Printf("cannot handle message received, NACKing..., err: %v\n", msg.Err)
+				// Unacknowledge the message
+				err := c.conn.Nack(msg)
+				if err != nil {
+					log.Printf("failed to unacknowledge the message, err: %v\n", err)
+				}
+			} else {
+				c.connect()
 			}
 		} else {
 			// Acknowledge the message
@@ -76,12 +81,12 @@ func (c *Client) Consume(consumer messageConsumer) {
 				consumer(msg.Body)
 			}
 		}
-
 	}
 }
 
 func (c *Client) Disconnect() error {
 	if c != nil {
+		log.Println("closing stomp connection")
 		return c.conn.Disconnect()
 	}
 
