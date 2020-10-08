@@ -18,9 +18,10 @@ type Options struct {
 }
 
 type Client struct {
-	conn *stomp.Conn
-	opts Options
-	sub  *stomp.Subscription
+	conn   *stomp.Conn
+	opts   Options
+	sub    *stomp.Subscription
+	closed bool
 }
 
 type messageConsumer func([]byte)
@@ -36,25 +37,28 @@ func NewClient(opts Options) *Client {
 
 func (c *Client) connect() {
 	for {
-		log.Printf("connecting to stomp on %s\n", c.opts.Target)
-		websocketconn, err := Dial(c.opts.Target, c.opts.Protocol)
-		if err == nil {
-			conn, err := stomp.Connect(websocketconn,
-				stomp.ConnOpt.Login(c.opts.Login, c.opts.Passcode),
-				stomp.ConnOpt.HeartBeat(time.Duration(c.opts.RecvTimeout)*time.Millisecond, time.Duration(c.opts.SendTimeout)*time.Millisecond),
-			)
+		if !c.closed {
+			log.Printf("connecting to stomp on %s\n", c.opts.Target)
+			websocketconn, err := Dial(c.opts.Target, c.opts.Protocol)
 			if err == nil {
-				c.conn = conn
-				sub, err := c.conn.Subscribe(c.opts.Destination, stomp.AckClient)
-				if err != stomp.ErrClosedUnexpectedly {
-					c.sub = sub
-					log.Println("connection stomp established!")
-					return
+				conn, err := stomp.Connect(websocketconn,
+					stomp.ConnOpt.Login(c.opts.Login, c.opts.Passcode),
+					stomp.ConnOpt.HeartBeat(time.Duration(c.opts.RecvTimeout)*time.Millisecond, time.Duration(c.opts.SendTimeout)*time.Millisecond),
+				)
+				if err == nil {
+					c.conn = conn
+					sub, err := c.conn.Subscribe(c.opts.Destination, stomp.AckClient)
+					if err != stomp.ErrClosedUnexpectedly {
+						c.sub = sub
+						log.Println("connection stomp established!")
+						return
+					}
 				}
 			}
+
+			logError("connection to stomp failed, retrying in 1 sec...", err)
+			time.Sleep(1 * time.Second)
 		}
-		logError("connection to stomp failed, retrying in 1 sec...", err)
-		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -87,6 +91,7 @@ func (c *Client) Consume(consumer messageConsumer) {
 func (c *Client) Disconnect() error {
 	if c != nil {
 		log.Println("closing stomp connection")
+		c.closed = true
 		return c.conn.Disconnect()
 	}
 
