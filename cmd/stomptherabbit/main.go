@@ -48,8 +48,8 @@ func main() {
 	}()
 
 	fmt.Println(c.ToString())
-	fmt.Println("Waiting for messages...")
+	log.Println("Waiting for messages...")
 	<-done
-	fmt.Println("Gracefully exiting...")
+	log.Println("Gracefully exiting...")
 	wsClient.Disconnect()
 }

@@ -32,6 +32,7 @@ func NewAmqpManager(url, exchangeName, contentType string) *AmqpManager {
 
 func (m *AmqpManager) Close() {
 	log.Println("closing rabbitmq connection")
+	m.closed = true
 	m.channel.Close()
 	m.connection.Close()
 }
