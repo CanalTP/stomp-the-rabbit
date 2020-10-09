@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/CanalTP/stomptherabbit/internal/rabbitmq"
+	"github.com/CanalTP/stomptherabbit/internal/amqp"
 	"github.com/CanalTP/stomptherabbit/internal/webstomp"
 )
 
@@ -17,8 +17,8 @@ func main() {
 		log.Fatalf("failed to load configuration: %s", err)
 	}
 
-	m := rabbitmq.NewAmqpManager(c.RabbitMQ.URL, c.RabbitMQ.Exchange.Name, c.RabbitMQ.ContentType)
-	defer m.Close()
+	amqpClient := amqp.NewClient(c.AMQP.URL, c.AMQP.Exchange.Name, c.AMQP.ContentType)
+	defer amqpClient.Close()
 
 	done := make(chan struct{})
 	go func() {
@@ -43,7 +43,7 @@ func main() {
 	go func() {
 		wsClient = webstomp.NewClient(opts)
 		wsClient.Consume(func(msg []byte) {
-			m.Send(msg)
+			amqpClient.Send(msg)
 		})
 	}()
 
