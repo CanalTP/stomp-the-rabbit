@@ -1,4 +1,4 @@
-package rabbitmq
+package amqp
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type AmqpManager struct {
+type Client struct {
 	url          string
 	exchangeName string
 	contentType  string
@@ -18,8 +18,8 @@ type AmqpManager struct {
 	closed       bool
 }
 
-func NewAmqpManager(url, exchangeName, contentType string) *AmqpManager {
-	m := new(AmqpManager)
+func NewClient(url, exchangeName, contentType string) *Client {
+	m := new(Client)
 	m.url = url
 	m.exchangeName = exchangeName
 	m.contentType = contentType
@@ -30,35 +30,35 @@ func NewAmqpManager(url, exchangeName, contentType string) *AmqpManager {
 	return m
 }
 
-func (m *AmqpManager) Close() {
-	log.Println("closing rabbitmq connection")
+func (m *Client) Close() {
+	log.Println("closing amqp broker connection")
 	m.closed = true
 	m.channel.Close()
 	m.connection.Close()
 }
 
-func (m *AmqpManager) connect() {
+func (m *Client) connect() {
 	for {
-		log.Printf("connecting to rabbitmq on %s\n", m.url)
+		log.Printf("connecting to amqp broker on %s\n", m.url)
 		conn, err := amqp.Dial(m.url)
 		if err == nil {
 			m.connection = conn
 			m.errorChannel = make(chan *amqp.Error)
 			m.connection.NotifyClose(m.errorChannel)
 
-			log.Println("connection rabbitmq established!")
+			log.Println("connection amqp broker established!")
 
 			m.openChannel()
 			m.declareExchange()
 
 			return
 		}
-		logError("connection to rabbitmq failed, retrying in 1 sec...", err)
+		logError("connection to amqp broker failed, retrying in 1 sec...", err)
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func (m *AmqpManager) reconnector() {
+func (m *Client) reconnector() {
 	for {
 		err := <-m.errorChannel
 		if !m.closed {
@@ -68,13 +68,13 @@ func (m *AmqpManager) reconnector() {
 	}
 }
 
-func (m *AmqpManager) openChannel() {
+func (m *Client) openChannel() {
 	channel, err := m.connection.Channel()
 	logError("opening channel failed", err)
 	m.channel = channel
 }
 
-func (m *AmqpManager) declareExchange() {
+func (m *Client) declareExchange() {
 	err := m.channel.ExchangeDeclare(
 		m.exchangeName, // name
 		"fanout",       // type
@@ -88,7 +88,7 @@ func (m *AmqpManager) declareExchange() {
 	logError("Failed to declare an exchange", err)
 }
 
-func (m *AmqpManager) Send(message []byte) {
+func (m *Client) Send(message []byte) {
 	err := m.channel.Publish(
 		m.exchangeName, // exchange
 		"",             // routing key

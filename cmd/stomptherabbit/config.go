@@ -17,7 +17,7 @@ type Config struct {
 		SendTimeout int
 		RecvTimeout int
 	}
-	RabbitMQ struct {
+	AMQP struct {
 		URL      string
 		Exchange struct {
 			Name string
@@ -37,10 +37,10 @@ func (c *Config) ToString() string {
 	fmt.Fprintln(&b, "Webstomp protocol is\t\t", c.Webstomp.Protocol)
 	fmt.Fprintln(&b, "Webstomp send timeout is\t", c.Webstomp.SendTimeout)
 	fmt.Fprintln(&b, "Webstomp receive timeout is\t", c.Webstomp.RecvTimeout)
-	fmt.Fprintln(&b, "\nRabbitMQ configuration")
+	fmt.Fprintln(&b, "\nAMQP configuration")
 	fmt.Fprintln(&b, "------------------------")
-	fmt.Fprintln(&b, "RabbitMQ url is\t\t\t", c.RabbitMQ.URL)
-	fmt.Fprintln(&b, "RabbitMQ exchange name is\t", c.RabbitMQ.Exchange.Name)
+	fmt.Fprintln(&b, "AMQP broker url is\t\t\t", c.AMQP.URL)
+	fmt.Fprintln(&b, "Amqp exchange name is\t", c.AMQP.Exchange.Name)
 
 	return b.String()
 }
@@ -56,8 +56,8 @@ func init() {
 
 	viper.SetDefault("webstomp.sendTimeout", "0")
 	viper.SetDefault("webstomp.recvTimeout", "0")
-	viper.SetDefault("rabbitmq.url", "amqp://guest:guest@localhost:5672//")
-	viper.SetDefault("rabbitmq.contentType", "application/json")
+	viper.SetDefault("amqp.url", "amqp://guest:guest@localhost:5672//")
+	viper.SetDefault("amqp.contentType", "application/json")
 
 	// I need that to be able to unmarshal from env vars
 	viper.BindEnv("webstomp.target")
@@ -66,7 +66,7 @@ func init() {
 	viper.BindEnv("webstomp.protocol")
 	viper.BindEnv("webstomp.destination")
 	viper.BindEnv("rabbimq.url")
-	viper.BindEnv("rabbitmq.exchange.name")
+	viper.BindEnv("amqp.exchange.name")
 }
 
 func config() (*Config, error) {
