@@ -1,11 +1,14 @@
 # stomptherabbit
 
-`stomptherabbit` is a program that allows to broadcast [STOMP over Websocket](http://jmesnil.net/stomp-websocket/doc/)
-messages to [RabbitMQ](https://www.rabbitmq.com/).
+`stomptherabbit` is a program that allows to broadcast [STOMP over Websocket]
+messages to an [AMQP] broker.
 
 ## Architecture overview
 
-TODO: Schema
+The only **Stomp** broker tested is [ActiveMQ].\
+The only **AMQP** broker tested is [RabbitMQ].
+
+![Architecture schema](docs/architecture.png)
 
 ## Prerequisites
 
@@ -75,3 +78,8 @@ make run
 docker build -t stomptherabbit .
 docker run --rm --env-file=/path/to/config.yml stomptherabbit
 ```
+
+[ActiveMQ]: http://activemq.apache.org/
+[AMQP]: https://www.amqp.org/
+[STOMP over Websocket]: http://jmesnil.net/stomp-websocket/doc/
+[RabbitMQ]: https://www.rabbitmq.com/
