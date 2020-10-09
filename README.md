@@ -5,7 +5,7 @@ messages to [RabbitMQ](https://www.rabbitmq.com/).
 
 ## Architecture overview
 
-TODO: Schema
+![Architecture schema](docs/architecture.png)
 
 ## Prerequisites
 
