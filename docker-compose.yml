@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  stomptherabbit:
+    image: ${REGISTRY_HOST}/${REGISTRY_NAMESPACE}/stomptherabbit:${VERSION}
+    container_name: stomptherabbit
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: ${FLUENTD_ADDRESS}
+        tag: stomptherabbit
+        fluentd-async-connect: "true"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - APP_WEBSTOMP_TARGET=${APP_WEBSTOMP_TARGET}
+      - APP_WEBSTOMP_LOGIN=${APP_WEBSTOMP_LOGIN}
+      - APP_WEBSTOMP_PASSCODE=${APP_WEBSTOMP_PASSCODE}
+      - APP_WEBSTOMP_DESTINATION=${APP_WEBSTOMP_DESTINATION}
+      - APP_WEBSTOMP_PROTOCOL=${APP_WEBSTOMP_PROTOCOL}
+      - APP_WEBSTOMP_SENDTIMEOUT=${APP_WEBSTOMP_SENDTIMEOUT}
+      - APP_WEBSTOMP_RECVTIMEOUT=${APP_WEBSTOMP_RECVTIMEOUT}
+      - APP_WEBSTOMP_CONTENT_TYPE=${APP_WEBSTOMP_CONTENT_TYPE}
+      - APP_AMQP_URL=${APP_AMQP_URL}
+      - APP_AMQP_EXCHANGE_NAME=${APP_AMQP_EXCHANGE_NAME}
