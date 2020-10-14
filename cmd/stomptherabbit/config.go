@@ -65,7 +65,6 @@ func init() {
 	viper.BindEnv("webstomp.passcode")
 	viper.BindEnv("webstomp.protocol")
 	viper.BindEnv("webstomp.destination")
-	viper.BindEnv("rabbimq.url")
 	viper.BindEnv("amqp.exchange.name")
 }
 

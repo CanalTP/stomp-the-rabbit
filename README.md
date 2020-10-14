@@ -43,18 +43,18 @@ If you compile from source just create `config.yml` in the root directory, copy 
 
 ### Configuration parameters
 
-| Environment variable       | parameter in yaml file | Default          | Signification                         |
-| -------------------------- | ---------------------- | ---------------- | ------------------------------------- |
-| APP_WEBSTOMP_TARGET        | webstomp.target        |                  | Url for STOMP connection              |
-| APP_WEBSTOMP_LOGIN         | webstomp.login         |                  | Login                                 |
-| APP_WEBSTOMP_PASSCODE      | webstomp.passcode      |                  | Password                              |
-| APP_WEBSTOMP_DESTINATION   | webstomp.destination   |                  | Topic or queue                        |
-| APP_WEBSTOMP_PROTOCOL      | webstomp.protocol      |                  | STOMP  version                        |
-| APP_WEBSTOMP_SENDTIMEOUT   | webstomp.sendTimeout   | 0                | Send timeout for STOMP heartbeat      |
-| APP_WEBSTOMP_RECVTIMEOUT   | webstomp.recvTimeout   | 0                | Receive timeout for STOMP heartbeat   |
-| APP_RABBITMQ_URL           | rabbitmq.url           |                  | RabbitMQ URL                          |
-| APP_RABBITMQ_EXCHANGE_NAME | rabbitmq.exchange.name |                  | RabbitMQ exchange name                |
-| APP_RABBITMQ_CONTENT_TYPE  | rabbitmq.contentType   | application/json | Content type of the message published |
+| Environment variable     | parameter in yaml file | Default          | Signification                         |
+| ------------------------ | ---------------------- | ---------------- | ------------------------------------- |
+| APP_WEBSTOMP_TARGET      | webstomp.target        |                  | Url for STOMP connection              |
+| APP_WEBSTOMP_LOGIN       | webstomp.login         |                  | Login                                 |
+| APP_WEBSTOMP_PASSCODE    | webstomp.passcode      |                  | Password                              |
+| APP_WEBSTOMP_DESTINATION | webstomp.destination   |                  | Topic or queue                        |
+| APP_WEBSTOMP_PROTOCOL    | webstomp.protocol      |                  | STOMP  version                        |
+| APP_WEBSTOMP_SENDTIMEOUT | webstomp.sendTimeout   | 0                | Send timeout for STOMP heartbeat      |
+| APP_WEBSTOMP_RECVTIMEOUT | webstomp.recvTimeout   | 0                | Receive timeout for STOMP heartbeat   |
+| APP_AMQP_URL             | amqp.url               |                  | AMQP broker URL                       |
+| APP_AMQP_EXCHANGE_NAME   | amqp.exchange.name     |                  | AMQP exchange name                    |
+| APP_AMQP_CONTENT_TYPE    | amqp.contentType       | application/json | Content type of the message published |
 
 ## Usage
 
