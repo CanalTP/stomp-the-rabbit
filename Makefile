@@ -41,8 +41,8 @@ endif
 
 .PHONY: docker_logout
 docker_logout: ## Logout from dockerhub
-	$(info > Logout from the Kisio Docker registry)
-	docker logout ${KISIO_DOCKER_REGISTRY}
+	$(info > Logout from dockerhub)
+	docker logout
 
 .PHONY: build_docker_image
 build_docker_image: docker_login ## Build docker image
