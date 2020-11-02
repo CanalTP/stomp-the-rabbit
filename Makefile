@@ -44,10 +44,10 @@ docker_logout: ## Logout from dockerhub
 	$(info > Logout from dockerhub)
 	docker logout
 
-.PHONY: build_docker_image
-build_docker_image: docker_login ## Build docker image
+.PHONY: release
+release: docker_login ## Release docker image
 	$(info > Build docker image)
-	@deploy/scripts/build.sh $(if $(findstring true,${DRY_RUN}), --dry-run)
+	@deploy/scripts/release.sh $(if $(findstring true,${DRY_RUN}), --dry-run)
 
 .PHONY: help
 help: ## Print this help message
