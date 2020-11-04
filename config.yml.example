@@ -1,3 +1,5 @@
+logger:
+  json: false
 webstomp:
   target: "wss://localhost:61614/stomp"
   login: "your_login"

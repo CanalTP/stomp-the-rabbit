@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/CanalTP/stomptherabbit"
 	"github.com/CanalTP/stomptherabbit/internal/amqp"
 	"github.com/CanalTP/stomptherabbit/internal/webstomp"
 )
@@ -17,7 +18,9 @@ func main() {
 		log.Fatalf("failed to load configuration: %s", err)
 	}
 
-	amqpClient := amqp.NewClient(c.AMQP.URL, c.AMQP.Exchange.Name, c.AMQP.ContentType)
+	logger := getLogger(stomptherabbit.Version, c.Logger.JSON)
+
+	amqpClient := amqp.NewClient(c.AMQP.URL, c.AMQP.Exchange.Name, c.AMQP.ContentType, logger)
 	defer amqpClient.Close()
 
 	done := make(chan struct{})
@@ -41,15 +44,15 @@ func main() {
 
 	var wsClient *webstomp.Client
 	go func() {
-		wsClient = webstomp.NewClient(opts)
+		wsClient = webstomp.NewClient(opts, logger)
 		wsClient.Consume(func(msg []byte) {
 			amqpClient.Send(msg)
 		})
 	}()
 
 	fmt.Println(c.ToString())
-	log.Println("Waiting for messages...")
+	logger.Println("Waiting for messages...")
 	<-done
-	log.Println("Gracefully exiting...")
+	logger.Println("Gracefully exiting...")
 	wsClient.Disconnect()
 }

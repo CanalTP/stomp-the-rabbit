@@ -1,7 +1,16 @@
-PROJECTNAME := $(shell basename "$(PWD)")
+VERSION := $(shell git describe --tag --always --dirty)
 
 GO ?= go
 GOARCH := amd64
+CGO_ENABLE := 1
+STATIC :=
+LDFLAGS := -X github.com/CanalTP/stomptherabbit.Version=$(VERSION)
+
+ifeq ($(STATIC),1)
+LDFLAGS += -w -s
+CGO_ENABLE := 0
+TAGS := netgo
+endif
 
 # used for building docker image only
 DRY_RUN ?= false
@@ -22,13 +31,13 @@ clean: ## Clean build files. Runs `go clean` internally.
 .PHONY: build
 build: ## Build and install the binary in the current directory
 	$(info >  Building binary for linux)
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build ./cmd/$(PROJECTNAME)
+	CGO_ENABLED=$(CGO_ENABLE) $(GO) build -a -tags "$(TAGS)" -ldflags "$(LDFLAGS)" ./cmd/stomptherabbit
 
 
 .PHONY: run
 run: ## Run the program
 	$(info > Running binary)
-	GOOS=linux GOARCH=$(GOARCH) $(GO) run -race ./cmd/$(PROJECTNAME)
+	GOOS=linux GOARCH=$(GOARCH) $(GO) run -race ./cmd/stomptherabbit
 
 .PHONY: docker_login
 docker_login: ## Login to dockerhub

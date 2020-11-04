@@ -8,6 +8,9 @@ import (
 )
 
 type Config struct {
+	Logger struct {
+		JSON bool
+	}
 	Webstomp struct {
 		Target      string
 		Login       string
@@ -54,6 +57,7 @@ func init() {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
+	viper.SetDefault("logger.json", false)
 	viper.SetDefault("webstomp.sendTimeout", "0")
 	viper.SetDefault("webstomp.recvTimeout", "0")
 	viper.SetDefault("amqp.url", "amqp://guest:guest@localhost:5672//")
