@@ -29,10 +29,6 @@ done
 # build only on a clean git status
 [ -n "$(git status --untracked-files=no --porcelain)" ] && Error "git status is not clean, build aborted"
 
-# build only 'master' branch
-branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
-[ "${branch}" != 'master' ] && Error "building is allowed only on branch 'master'"
-
 # step 0: prepare docker image name with registry and tag
 # get the tag from git
 tag=$(git describe --tags --abbrev=0 2> /dev/null)
