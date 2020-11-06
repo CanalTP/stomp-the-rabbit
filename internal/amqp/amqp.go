@@ -1,9 +1,9 @@
 package amqp
 
 import (
-	"log"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -16,67 +16,69 @@ type Client struct {
 	connection   *amqp.Connection
 	channel      *amqp.Channel
 	closed       bool
+	logger       *logrus.Entry
 }
 
-func NewClient(url, exchangeName, contentType string) *Client {
-	m := new(Client)
-	m.url = url
-	m.exchangeName = exchangeName
-	m.contentType = contentType
+func NewClient(url, exchangeName, contentType string, logger *logrus.Entry) *Client {
+	c := new(Client)
+	c.url = url
+	c.exchangeName = exchangeName
+	c.contentType = contentType
+	c.logger = logger
 
-	m.connect()
-	go m.reconnector()
+	c.connect()
+	go c.reconnector()
 
-	return m
+	return c
 }
 
-func (m *Client) Close() {
-	log.Println("closing amqp broker connection")
-	m.closed = true
-	m.channel.Close()
-	m.connection.Close()
+func (c *Client) Close() {
+	c.logger.Info("closing amqp broker connection")
+	c.closed = true
+	c.channel.Close()
+	c.connection.Close()
 }
 
-func (m *Client) connect() {
+func (c *Client) connect() {
 	for {
-		log.Printf("connecting to amqp broker on %s\n", m.url)
-		conn, err := amqp.Dial(m.url)
+		c.logger.Infof("connecting to amqp broker on %s\n", c.url)
+		conn, err := amqp.Dial(c.url)
 		if err == nil {
-			m.connection = conn
-			m.errorChannel = make(chan *amqp.Error)
-			m.connection.NotifyClose(m.errorChannel)
+			c.connection = conn
+			c.errorChannel = make(chan *amqp.Error)
+			c.connection.NotifyClose(c.errorChannel)
 
-			log.Println("connection amqp broker established!")
+			c.logger.Info("connection amqp broker established!")
 
-			m.openChannel()
-			m.declareExchange()
+			c.openChannel()
+			c.declareExchange()
 
 			return
 		}
-		logError("connection to amqp broker failed, retrying in 1 sec...", err)
+		c.logError("connection to amqp broker failed, retrying in 1 sec...", err)
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func (m *Client) reconnector() {
+func (c *Client) reconnector() {
 	for {
-		err := <-m.errorChannel
-		if !m.closed {
-			logError("reconnecting after connection closed", err)
-			m.connect()
+		err := <-c.errorChannel
+		if !c.closed {
+			c.logError("reconnecting after connection closed", err)
+			c.connect()
 		}
 	}
 }
 
-func (m *Client) openChannel() {
-	channel, err := m.connection.Channel()
-	logError("opening channel failed", err)
-	m.channel = channel
+func (c *Client) openChannel() {
+	channel, err := c.connection.Channel()
+	c.logError("opening channel failed", err)
+	c.channel = channel
 }
 
-func (m *Client) declareExchange() {
-	err := m.channel.ExchangeDeclare(
-		m.exchangeName, // name
+func (c *Client) declareExchange() {
+	err := c.channel.ExchangeDeclare(
+		c.exchangeName, // name
 		"fanout",       // type
 		true,           // durable
 		false,          // auto-deleted
@@ -85,26 +87,26 @@ func (m *Client) declareExchange() {
 		nil,            // arguments
 	)
 
-	logError("Failed to declare an exchange", err)
+	c.logError("Failed to declare an exchange", err)
 }
 
-func (m *Client) Send(message []byte) {
-	err := m.channel.Publish(
-		m.exchangeName, // exchange
+func (c *Client) Send(message []byte) {
+	err := c.channel.Publish(
+		c.exchangeName, // exchange
 		"",             // routing key
 		false,          // mandatory
 		false,          // immediate
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent,
-			ContentType:  m.contentType,
+			ContentType:  c.contentType,
 			Body:         message,
 		},
 	)
-	logError("failed to publish a message", err)
+	c.logError("failed to publish a message", err)
 }
 
-func logError(message string, err error) {
+func (c *Client) logError(message string, err error) {
 	if err != nil {
-		log.Printf("%s: %s", message, err)
+		c.logger.Infof("%s: %s", message, err)
 	}
 }

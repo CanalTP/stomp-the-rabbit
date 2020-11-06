@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-stomp/stomp"
+	"github.com/sirupsen/logrus"
 )
 
 type Options struct {
@@ -22,13 +23,15 @@ type Client struct {
 	opts   Options
 	sub    *stomp.Subscription
 	closed bool
+	logger *logrus.Entry
 }
 
 type messageConsumer func([]byte)
 
-func NewClient(opts Options) *Client {
+func NewClient(opts Options, logger *logrus.Entry) *Client {
 	c := new(Client)
 	c.opts = opts
+	c.logger = logger
 
 	c.connect()
 
@@ -38,7 +41,7 @@ func NewClient(opts Options) *Client {
 func (c *Client) connect() {
 	for {
 		if !c.closed {
-			log.Printf("connecting to stomp on %s\n", c.opts.Target)
+			c.logger.Infof("connecting to stomp on %s\n", c.opts.Target)
 			websocketconn, err := Dial(c.opts.Target, c.opts.Protocol)
 			if err == nil {
 				conn, err := stomp.Connect(websocketconn,
@@ -50,13 +53,13 @@ func (c *Client) connect() {
 					sub, err := c.conn.Subscribe(c.opts.Destination, stomp.AckClient)
 					if err != stomp.ErrClosedUnexpectedly {
 						c.sub = sub
-						log.Println("connection stomp established!")
+						c.logger.Info("connection stomp established!")
 						return
 					}
 				}
 			}
 
-			logError("connection to stomp failed, retrying in 1 sec...", err)
+			c.logError("connection to stomp failed, retrying in 1 sec...", err)
 			time.Sleep(1 * time.Second)
 		}
 	}
@@ -67,7 +70,7 @@ func (c *Client) Consume(consumer messageConsumer) {
 		msg := <-c.sub.C
 		if msg != nil && msg.Err != nil {
 			if c.sub.Active() {
-				log.Printf("cannot handle message received, NACKing..., err: %v\n", msg.Err)
+				c.logger.Infof("cannot handle message received, NACKing..., err: %v\n", msg.Err)
 				// Unacknowledge the message
 				err := c.conn.Nack(msg)
 				if err != nil {
@@ -80,7 +83,7 @@ func (c *Client) Consume(consumer messageConsumer) {
 			// Acknowledge the message
 			err := c.conn.Ack(msg)
 			if err != nil {
-				log.Printf("failed to aknowledge message, err: %v\n", err)
+				c.logger.Infof("failed to aknowledge message, err: %v\n", err)
 			} else {
 				consumer(msg.Body)
 			}
@@ -90,7 +93,7 @@ func (c *Client) Consume(consumer messageConsumer) {
 
 func (c *Client) Disconnect() error {
 	if c != nil {
-		log.Println("closing stomp connection")
+		c.logger.Info("closing stomp connection")
 		c.closed = true
 		return c.conn.Disconnect()
 	}
@@ -98,8 +101,8 @@ func (c *Client) Disconnect() error {
 	return nil
 }
 
-func logError(message string, err error) {
+func (c *Client) logError(message string, err error) {
 	if err != nil {
-		log.Printf("%s: %s", message, err)
+		c.logger.Infof("%s: %s", message, err)
 	}
 }
