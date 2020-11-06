@@ -40,7 +40,7 @@ has_tag=$(git tag --list --points-at HEAD)
 # step 1: build docker images for git HEAD
 image_fullname="${docker_namespace}/${image}:${tag}"
 echo "Building $image_fullname"
-docker build --force-rm -t "${image_fullname}" "${script_path}"/../..
+docker build --pull --no-cache --force-rm -t "${image_fullname}" "${script_path}"/../..
 
 # step 2: push the image to the registry
 if [ "${dry_run}" = 'false' ]; then
