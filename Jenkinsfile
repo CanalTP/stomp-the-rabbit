@@ -26,15 +26,27 @@ pipeline {
                 }
             }
         }
-        stage ('Release "dev"') {
+        stage ('Release') {
             when {
-                branch 'master'
+                anyOf {
+                    branch 'master'
+                    buildingTag()
+                }
             }
             steps {
                 script {
                     docker.withRegistry('', 'kisiodigital-user-dockerhub') {
                         sh "make release"
                     }
+                }
+            }
+        }
+        stage ('CD (dev)') {
+            when {
+                branch 'master'
+            }
+            steps {
+                script {
                     def handle = triggerRemoteJob(
                         remoteJenkinsName: 'jenkins-deployment',
                         job: 'pad_deploy',
