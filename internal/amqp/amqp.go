@@ -107,6 +107,6 @@ func (c *Client) Send(message []byte) {
 
 func (c *Client) logError(message string, err error) {
 	if err != nil {
-		c.logger.Infof("%s: %s", message, err)
+		c.logger.Errorf("%s: %s", message, err)
 	}
 }
