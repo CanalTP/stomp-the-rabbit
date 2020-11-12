@@ -1,7 +1,6 @@
 package webstomp
 
 import (
-	"log"
 	"net"
 	"net/url"
 
@@ -12,7 +11,7 @@ import (
 func Dial(target string, protocol string) (net.Conn, error) {
 	u, err := url.Parse(target)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	origin, err := u.Parse("/")
 	if err != nil {

@@ -61,7 +61,7 @@ func init() {
 	viper.SetDefault("webstomp.sendTimeout", "0")
 	viper.SetDefault("webstomp.recvTimeout", "0")
 	viper.SetDefault("amqp.url", "amqp://guest:guest@localhost:5672//")
-	viper.SetDefault("amqp.contentType", "application/json")
+	viper.SetDefault("amqp.contentType", "plain/text")
 
 	// I need that to be able to unmarshal from env vars
 	viper.BindEnv("webstomp.target")
