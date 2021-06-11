@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/CanalTP/stomptherabbit/internal/scoreboard"
 	"github.com/go-stomp/stomp"
 	"github.com/sirupsen/logrus"
 )
@@ -65,7 +66,7 @@ func (c *Client) connect() {
 	}
 }
 
-func (c *Client) Consume(consumer messageConsumer) {
+func (c *Client) Consume(consumer messageConsumer, scoreboard *scoreboard.ScoreBoard) {
 	for {
 		msg := <-c.sub.C
 		if msg != nil && msg.Err != nil {
@@ -86,6 +87,7 @@ func (c *Client) Consume(consumer messageConsumer) {
 				c.logger.Infof("failed to aknowledge message, err: %v\n", err)
 			} else {
 				consumer(msg.Body)
+				scoreboard.Set("dateLastMessageReceiveSNCF")
 			}
 		}
 	}
