@@ -1,4 +1,4 @@
-package api
+package webstomp
 
 import (
 	"net/http"

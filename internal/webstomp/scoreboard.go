@@ -1,4 +1,4 @@
-package scoreboard
+package webstomp
 
 import (
 	"sync"

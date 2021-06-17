@@ -1,4 +1,4 @@
-package api
+package webstomp
 
 import (
 	"encoding/json"
@@ -8,23 +8,21 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/CanalTP/stomptherabbit/internal/scoreboard"
-	"github.com/CanalTP/stomptherabbit/internal/webstomp"
 	"github.com/streadway/amqp"
 )
 
 type responseStatus struct {
-	ApplicationName                 string    `json:"applicationName"`
-	ApplicationVersion              string    `json:"applicationVersion"`
-	Hostname                        string    `json:"hostname"`
-	AmqpHostname                    string    `json:"amqpHostname"`
-	WebstompHostname                string    `json:"webstompHostname"`
-	GoRuntimeVersion                string    `json:"goRuntimeVersion"`
-	IsAmqpConnActive                bool      `json:"isAmqpConnActive"`
-	IsWebStompConnActive            bool      `json:"isWebStompConnActive"`
-	DateLastMessageReceiveSNCF      time.Time `json:"dateLastMessageReceiveSNCF"`
-	DateLastAttempSendRabbitMQ      time.Time `json:"dateLastMessageSendRabbitMQ"`
-	DateLastSuccessfulWriteRabbitMQ time.Time `json:"dateLastMessageSuccessfulWriteRabbitMQ"`
+	ApplicationName             string    `json:"applicationName"`
+	ApplicationVersion          string    `json:"applicationVersion"`
+	Hostname                    string    `json:"hostname"`
+	AmqpHostname                string    `json:"amqpHostname"`
+	WebstompHostname            string    `json:"webstompHostname"`
+	GoRuntimeVersion            string    `json:"goRuntimeVersion"`
+	IsAmqpConnActive            bool      `json:"isAmqpConnActive"`
+	IsWebStompConnActive        bool      `json:"isWebStompConnActive"`
+	LastMessageReceiveSNCF      time.Time `json:"lastMessageReceiveSNCF"`
+	LastAttempSendRabbitMQ      time.Time `json:"lastAttempSendRabbitMQ"`
+	LastSuccessfulWriteRabbitMQ time.Time `json:"lastSuccessfulWriteRabbitMQ"`
 }
 
 type datesScoreBoard struct {
@@ -50,32 +48,32 @@ func (r *responseStatus) setStatusAmqp(amqpURL string) {
 		conn.Close()
 	}
 }
-func (r *responseStatus) setStatusStomp(stompOpts webstomp.Options) {
+func (r *responseStatus) setStatusStomp(stompOpts Options) {
 	r.IsWebStompConnActive = false
 	r.WebstompHostname = stompOpts.Target
-	if websocketconn, err := webstomp.Dial(stompOpts.Target, stompOpts.Protocol); err == nil {
+	if websocketconn, err := Dial(stompOpts.Target, stompOpts.Protocol); err == nil {
 		r.IsWebStompConnActive = true
 		websocketconn.Close()
 	}
 }
 
 func (r *responseStatus) setStatusScoreBoard(mapScore map[string]time.Time) {
-	r.DateLastMessageReceiveSNCF = mapScore["dateLastMessageReceiveSNCF"]
-	r.DateLastAttempSendRabbitMQ = mapScore["dateLastMessageAttempSendRabbitMQ"]
-	r.DateLastSuccessfulWriteRabbitMQ = mapScore["dateLastMessageSuccessfulWriteRabbitMQ"]
+	r.LastMessageReceiveSNCF = mapScore["lastMessageReceiveSNCF"]
+	r.LastAttempSendRabbitMQ = mapScore["lastAttempSendRabbitMQ"]
+	r.LastSuccessfulWriteRabbitMQ = mapScore["lastSuccessfulWriteRabbitMQ"]
 }
 
 // StatusHandler : web handler for stomptherabbit status
 type StatusHandler struct {
 	amqpURL            string
-	webstompOptions    webstomp.Options
+	webstompOptions    Options
 	applicationVersion string
 	applicationName    string
-	scoreboard         *scoreboard.ScoreBoard
+	scoreboard         *ScoreBoard
 }
 
 //NewStatusHandler : constuctor for statusHandler
-func NewStatusHandler(amqpURL string, webstompOptions webstomp.Options, version, applicationName string, scoreboard *scoreboard.ScoreBoard) *StatusHandler {
+func NewStatusHandler(amqpURL string, webstompOptions Options, version, applicationName string, scoreboard *ScoreBoard) *StatusHandler {
 	return &StatusHandler{
 		amqpURL:            amqpURL,
 		webstompOptions:    webstompOptions,
@@ -89,7 +87,6 @@ func (h *StatusHandler) getStatus() *responseStatus {
 	hostname, _ := os.Hostname()
 	response := newResponseStatus(h.applicationName, h.applicationVersion, hostname)
 	response.setStatusAmqp(h.amqpURL)
-	response.setStatusStomp(h.webstompOptions)
 	response.setStatusStomp(h.webstompOptions)
 	response.setStatusScoreBoard(h.scoreboard.All())
 	return response

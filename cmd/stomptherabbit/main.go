@@ -10,8 +10,6 @@ import (
 
 	"github.com/CanalTP/stomptherabbit"
 	"github.com/CanalTP/stomptherabbit/internal/amqp"
-	"github.com/CanalTP/stomptherabbit/internal/api"
-	"github.com/CanalTP/stomptherabbit/internal/scoreboard"
 	"github.com/CanalTP/stomptherabbit/internal/webstomp"
 )
 
@@ -22,7 +20,8 @@ func main() {
 	}
 
 	logger := getLogger(stomptherabbit.Version, c.Logger.JSON)
-	scoreboard := scoreboard.NewScoreBoard()
+
+	scoreboard := webstomp.NewScoreBoard()
 
 	opts := webstomp.Options{
 		Protocol:    c.Webstomp.Protocol,
@@ -35,8 +34,8 @@ func main() {
 	}
 
 	// Lanch web service for supervision : Listen port 8080
-	router := api.Router(
-		api.NewStatusHandler(
+	router := webstomp.Router(
+		webstomp.NewStatusHandler(
 			c.AMQP.URL,
 			opts,
 			stomptherabbit.Version,
@@ -60,7 +59,7 @@ func main() {
 	go func() {
 		wsClient = webstomp.NewClient(opts, logger)
 		wsClient.Consume(func(msg []byte) {
-			scoreboard.Set("dateLastMessageAttempSendRabbitMQ")
+			scoreboard.Set("lastAttempSendRabbitMQ")
 			amqpClient.Send(msg, &scoreboard)
 		}, &scoreboard)
 	}()
