@@ -1,4 +1,4 @@
-package webstomp
+package webserver
 
 import (
 	"net/http"

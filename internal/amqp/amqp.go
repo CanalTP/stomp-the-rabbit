@@ -3,7 +3,6 @@ package amqp
 import (
 	"time"
 
-	"github.com/CanalTP/stomptherabbit/internal/webstomp"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -91,7 +90,7 @@ func (c *Client) declareExchange() {
 	c.logError("Failed to declare an exchange", err)
 }
 
-func (c *Client) Send(message []byte, scoreboard *webstomp.ScoreBoard) {
+func (c *Client) Send(message []byte) error {
 	err := c.channel.Publish(
 		c.exchangeName, // exchange
 		"",             // routing key
@@ -103,10 +102,8 @@ func (c *Client) Send(message []byte, scoreboard *webstomp.ScoreBoard) {
 			Body:         message,
 		},
 	)
-	if err == nil {
-		scoreboard.Set("lastSuccessfulWriteRabbitMQ")
-	}
 	c.logError("failed to publish a message", err)
+	return err
 }
 
 func (c *Client) logError(message string, err error) {

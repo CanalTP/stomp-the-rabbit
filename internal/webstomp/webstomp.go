@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/CanalTP/stomptherabbit/internal/datecontainer"
 	"github.com/go-stomp/stomp"
 	"github.com/sirupsen/logrus"
 )
@@ -19,19 +20,21 @@ type Options struct {
 }
 
 type Client struct {
-	conn   *stomp.Conn
-	opts   Options
-	sub    *stomp.Subscription
-	closed bool
-	logger *logrus.Entry
+	conn              *stomp.Conn
+	opts              Options
+	sub               *stomp.Subscription
+	closed            bool
+	logger            *logrus.Entry
+	safeDateContainer *datecontainer.SafeDateContainer
 }
 
 type messageConsumer func([]byte)
 
-func NewClient(opts Options, logger *logrus.Entry) *Client {
+func NewClient(opts Options, logger *logrus.Entry, safeDateContainer *datecontainer.SafeDateContainer) *Client {
 	c := new(Client)
 	c.opts = opts
 	c.logger = logger
+	c.safeDateContainer = safeDateContainer
 
 	c.connect()
 
@@ -65,7 +68,7 @@ func (c *Client) connect() {
 	}
 }
 
-func (c *Client) Consume(consumer messageConsumer, scoreboard *ScoreBoard) {
+func (c *Client) Consume(consumer messageConsumer) {
 	for {
 		msg := <-c.sub.C
 		if msg != nil && msg.Err != nil {
@@ -83,10 +86,10 @@ func (c *Client) Consume(consumer messageConsumer, scoreboard *ScoreBoard) {
 			// Acknowledge the message
 			err := c.conn.Ack(msg)
 			if err != nil {
-				c.logger.Infof("failed to aknowledge message, err: %v\n", err)
+				c.logger.Infof("failed to acknowledge message, err: %v\n", err)
 			} else {
+				c.safeDateContainer.Refresh("lastStompMessageReceived")
 				consumer(msg.Body)
-				scoreboard.Set("lastMessageReceiveSNCF")
 			}
 		}
 	}
