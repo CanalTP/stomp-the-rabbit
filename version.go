@@ -1,3 +1,3 @@
 package stomptherabbit
 
-var Version = "undefined"
+var Version = "1.1.0"
