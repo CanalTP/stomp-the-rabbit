@@ -50,7 +50,7 @@ pipeline {
                     def handle = triggerRemoteJob(
                         remoteJenkinsName: 'jenkins-deployment',
                         job: 'pad_deploy',
-                        parameters: 'ENVIRONMENT=dev\nVERSION=latest',
+                        parameters: 'ENVIRONMENT=dev\nVERSION=latest\nANSIBLE_TAG=stomptherabbit',
                         blockBuildUntilComplete: true,
                         preventRemoteBuildQueue: true,
                     )
