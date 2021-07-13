@@ -35,7 +35,7 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry('', 'kisiodigital-user-dockerhub') {
+                    docker.withRegistry('', 'dockerhub-user') {
                         sh "make release"
                     }
                 }
